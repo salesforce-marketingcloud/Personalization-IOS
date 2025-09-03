@@ -1,6 +1,6 @@
 // swift-tools-version:5.3
 // The swift-tools-version declares the minimum version of Swift required to build this package.
-// This gets copied over from the dev repo over to the staging repo, then the staging repo gets pushed to production
+// This gets copied over from the dev repo over to the staging repo, then we push the staging repo to production during a release
 
 import PackageDescription
 
