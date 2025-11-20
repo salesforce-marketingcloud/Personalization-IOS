@@ -307,127 +307,426 @@ typedef unsigned int swift_uint4  __attribute__((__ext_vector_type__(4)));
 #if defined(__OBJC__)
 
 @class NSString;
-/// Optional context for <code>DecisionsRequest</code>.  Use <code>DecisionsRequestContextBuilder</code> to construct.
+/// Optional context to provide additional contextual data that can influence personalization decisions,
+/// such as ‘anchor’ information for content targeting, or custom contextual attributes.
+/// Build using <code>DecisionsRequestContextBuilder</code>, and provide to
+/// <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>
 SWIFT_CLASS_NAMED("DecisionsRequestContext")
 @interface SFPDecisionsRequestContext : NSObject
+/// The anchor ID for content targeting.
 @property (nonatomic, readonly, copy) NSString * _Nullable anchorId;
+/// The anchor DMO (Data Model Object) name.
 @property (nonatomic, readonly, copy) NSString * _Nullable anchorDmoName;
+/// The complete contextual data provided to the <code>DecisionsRequestContextBuilder</code>,
+/// including custom contextual attributes and any provided anchor information.
 @property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nonnull contextualAttributes;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER SWIFT_UNAVAILABLE_MSG("Use the Builder to create an instance.");
 @end
 
 @class NSDate;
-/// Used to construct <code>DecisionsRequestContext</code>
+/// Used to construct an optional <code>DecisionsRequestContext</code> to provide to
+/// <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>
 SWIFT_CLASS_NAMED("DecisionsRequestContextBuilder")
 @interface SFPDecisionsRequestContextBuilder : NSObject
+/// Sets the optional anchor ID for content targeting.
+/// If you provide this, you may wish to also provide the <code>anchorDmoName(_:)</code>
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)anchorId:(NSString * _Nullable)aId SWIFT_WARN_UNUSED_RESULT;
+/// Sets the optional anchor DMO (Data Model Object) name for an optionally provided <code>anchorId(_:)</code>
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)anchorDmoName:(NSString * _Nullable)aDmoName SWIFT_WARN_UNUSED_RESULT;
+/// Adds a string contextual attribute. Allows empty string.
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)contextualAttributeWithName:(NSString * _Nonnull)name string:(NSString * _Nonnull)string SWIFT_WARN_UNUSED_RESULT;
+/// Adds an int contextual attribute.
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)contextualAttributeWithName:(NSString * _Nonnull)name int:(NSInteger)int_ SWIFT_WARN_UNUSED_RESULT;
+/// Adds a double contextual attribute.
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)contextualAttributeWithName:(NSString * _Nonnull)name double:(double)double_ SWIFT_WARN_UNUSED_RESULT;
+/// Adds a float contextual attribute.
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)contextualAttributeWithName:(NSString * _Nonnull)name float:(float)float_ SWIFT_WARN_UNUSED_RESULT;
+/// Adds a date contextual attribute. Will ultimately be serialized to ISO8601 date string.
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)contextualAttributeWithName:(NSString * _Nonnull)name date:(NSDate * _Nonnull)date SWIFT_WARN_UNUSED_RESULT;
+/// Adds a bool contextual attribute.
+/// @return This builder instance
 - (SFPDecisionsRequestContextBuilder * _Nonnull)contextualAttributeWithName:(NSString * _Nonnull)name bool:(BOOL)bool_ SWIFT_WARN_UNUSED_RESULT;
+/// Builds the <code>DecisionsRequestContext</code>
+/// @return the built <code>DecisionsRequestContext</code>
 - (SFPDecisionsRequestContext * _Nonnull)build SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
 @class SFPDecisionsResponsePersonalization;
-/// The response for a successful<code>fetchDecisions</code> call
+/// The successful response for
+/// <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>
+/// Contains all personalization results for the requested personalization points,
+/// along with request tracking information and convenient lookup utilities.
 SWIFT_CLASS_NAMED("DecisionsResponse")
 @interface SFPDecisionsResponse : NSObject
-@property (nonatomic, readonly, copy) NSString * _Nullable requestId;
-/// The personalizations for each personalization point name specified in the request.
+/// An identifier associated with the underlying network request to <code>/personalization/decisions</code>, which may be useful for diagnostics.
+@property (nonatomic, readonly, copy) NSString * _Nonnull requestId;
+/// An array of <code>DecisionsResponsePersonalization</code>s  based on the <code>personalizationPointNames</code> originally provided in the request to
+/// <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>.
+/// Prefer instead using <code>personalizationsByName</code> for lookup.
+/// Note if a <code>DecisionsResponsePersonalization</code> is not found for one of the requested <code>personalizationPointNames</code>, it could be due to:
+/// <ul>
+///   <li>
+///     The point name wasn’t found in the backend
+///   </li>
+///   <li>
+///     The <code>DecisionsResponsePersonalization</code> for that point was deemed invalid, and dropped.
+///     Check the logs from this Personazation Sdk, and the log level provided to <code>SFMCSdk.setLogger</code>
+///   </li>
+/// </ul>
 @property (nonatomic, readonly, copy) NSArray<SFPDecisionsResponsePersonalization *> * _Nonnull personalizations;
-/// The raw JSON from which this class was initialized from. Can be useful for logging etc.
-@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nonnull rawJson;
+/// Get the <code>DecisionsResponsePersonalization</code> per Personalization Point name,
+/// from <code>personalizationPointNames</code> originally provided in the request to
+/// <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>.
+/// Prefer using this over <code>personalizations</code>.
+/// <em>Behavior</em>
+/// <ul>
+///   <li>
+///     Keys are the <code>personalizationPointName</code> <em>trimmed</em> of leading/trailing whitespace.
+///     Which matches behavior within <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>.
+///   </li>
+///   <li>
+///     If a <code>DecisionsResponsePersonalization</code> is not found for one of the requested <code>personalizationPointNames</code>, it could be due to:
+///     <ul>
+///       <li>
+///         The point name wasn’t found in the backend
+///       </li>
+///       <li>
+///         The <code>DecisionsResponsePersonalization</code> for that point was deemed invalid, and dropped.
+///         Check the logs from this Personazation Sdk, and the log level provided to <code>SFMCSdk.setLogger</code>
+///       </li>
+///     </ul>
+///   </li>
+/// </ul>
+/// <em>Performance</em>
+/// <ul>
+///   <li>
+///     Constructed once on first access and cached thereafter.
+///   </li>
+/// </ul>
+/// <em>Example</em>
+/// \code
+/// if let p = response.personalizationsByName["homeHero"] {
+///     // use p.attributes / p.data
+/// }
+///
+/// \endcode
+@property (nonatomic, copy) NSDictionary<NSString *, SFPDecisionsResponsePersonalization *> * _Nonnull personalizationsByName;
 - (nonnull instancetype)init SWIFT_UNAVAILABLE;
 + (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end
 
-/// Each ‘data’ within a <code>DecisionsResponsePersonalization</code>’s <code>data</code>
+/// Represents each <code>data</code> item within a <code>DecisionsResponsePersonalization</code>’s  <code>DecisionsResponsePersonalization/data</code> array.
+/// Read-only and immutable.
+/// The <code>Any</code> values are derived from JSON and may be <code>NSNull</code>.
+/// <em>Examples</em>
+/// Using subscript access:
+/// \code
+/// // Find/validate an expected string, else use a fallback value:
+/// let someString: String
+/// if let foundString = theContentObject["someKeyToExpectedString"] as? String, !foundString.isEmpty {
+///     someString = foundString
+/// } else {
+///     someString = "fallback value"
+/// }
+/// // Iterate keys:
+/// theContentObject.keys.forEach { key in
+///     let value = theContentObject[key]
+///     // use key and value...
+/// }
+///
+/// \endcodeUsing <code>jsonDict</code>:
+/// \code
+/// // Find/validate an expected string, else use a fallback value:
+/// let someString: String
+/// if let foundString = theContentObject.jsonDict["someKeyToExpectedString"] as? String, !foundString.isEmpty {
+///     someString = foundString
+/// } else {
+///     someString = "fallback value"
+/// }
+/// // Iterate entries:
+/// theContentObject.jsonDict.forEach { (key: String, value: Any) in
+///     // use key and value...
+/// }
+///
+/// \endcode
 SWIFT_CLASS_NAMED("DecisionsResponseContentObject")
 @interface SFPDecisionsResponseContentObject : NSObject
-/// The raw JSON from which this class was initialized from. Can be useful for logging etc.
-@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nonnull rawJson;
+/// Unique identifier for this personalization content object.
+/// This ID uniquely identifies this specific personalization content object and can be used
+/// for tracking, analytics, or correlation with other systems.
+@property (nonatomic, readonly, copy) NSString * _Nonnull personalizationContentId;
+/// This personalization content object in Dictionary form.
+/// The <code>Any</code> values are derived from JSON and may be <code>NSNull</code>.
+@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nonnull jsonDict;
+- (id _Nullable)objectForKeyedSubscript:(NSString * _Nonnull)key SWIFT_WARN_UNUSED_RESULT;
+/// The keys of this content object, which can be used for subscript access, see example at <code>DecisionsResponseContentObject</code>.
+@property (nonatomic, readonly, copy) NSArray<NSString *> * _Nonnull keys;
 - (nonnull instancetype)init SWIFT_UNAVAILABLE;
 + (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end
 
-/// Each ‘personalization’ within a <code>DecisionsResponse</code>’s <code>personalizations</code>
+/// Represents each <code>personalization</code> within the response <code>DecisionsResponse/personalizations</code>
+/// Contains all the data for a specific personalization point, including the decision details,
+/// content objects, and response metadata returned by the personalization engine.
+/// Read-only and immutable.
 SWIFT_CLASS_NAMED("DecisionsResponsePersonalization")
 @interface SFPDecisionsResponsePersonalization : NSObject
+/// Unique identifier for this personalization instance.
+/// This ID uniquely identifies this specific personalization result and can be used
+/// for tracking, analytics, or correlation with other systems.
 @property (nonatomic, readonly, copy) NSString * _Nonnull personalizationId;
+/// Identifier for the personalization point configuration.
+/// This corresponds to the personalization point setup in the system and identifies
+/// which personalization configuration was used to generate this result.
 @property (nonatomic, readonly, copy) NSString * _Nonnull personalizationPointId;
+/// Human-readable name of the personalization point.
+/// This is the name you provided within <code>personalizationPointNames</code> to
+/// <code>PersonalizationModule/fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>
+/// and can be used to identify which personalization point this result corresponds to.
+/// Used as the key in <code>DecisionsResponse/personalizationsByName</code> for easy lookup.
 @property (nonatomic, readonly, copy) NSString * _Nonnull personalizationPointName;
+/// Optional decision identifier for this personalization.
+/// When present, indicates that a personalization decision was made for this personalization point.
+/// This can be used for analytics and decision tracking.
+@property (nonatomic, readonly, copy) NSString * _Nullable decisionId;
+/// Array of <code>DecisionsResponseContentObject</code>s containing the personalized content.
+/// The array may be empty.
+/// Each <code>DecisionsResponseContentObject</code> represents a piece of personalized content with its
+/// associated metadata.
 @property (nonatomic, readonly, copy) NSArray<SFPDecisionsResponseContentObject *> * _Nonnull data;
+/// Additional response attributes and metadata for this personalization.
+/// Contains configuration parameters, response metadata, and other supplementary data
+/// associated with this personalization result.
+/// The <code>Any</code> values are derived from JSON and may be <code>NSNull</code>.
 @property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nonnull attributes;
-/// The raw JSON from which this class was initialized from. Can be useful for logging etc.
-@property (nonatomic, readonly, copy) NSDictionary<NSString *, id> * _Nonnull rawJson;
 - (nonnull instancetype)init SWIFT_UNAVAILABLE;
 + (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
 @end
 
-/// This is a Personalization Config class used by the
-/// <a href="x-source-tag://PersonalizationConfigBuilder">PersonalizationConfigBuilder</a>
+/// The app-provided configuration for the Personalization Sdk,
+/// built using <code>PersonalizationConfigBuilder</code> and provided to <code>SFMCSdk</code>’s <code>initializeSdk</code>.
+/// See <code>PersonalizationModule</code> for example usage.
 SWIFT_CLASS_NAMED("PersonalizationConfig")
 @interface SFPersonalizationConfig : NSObject <SFMCSdkModuleConfig>
+/// Identifies this <code>ModuleName</code> as <code>personalization</code>. Required by <code>SFMCSdk</code>.
 @property (nonatomic, readonly) enum SFMCSdkModuleName name;
+/// Identifier required by <code>SFMCSdk</code>.
 @property (nonatomic, readonly, copy) NSString * _Nonnull appId;
-/// Personalization does not currently use this, but it’s presence is required by SFMC ModuleConfig
+/// Not applicable for Personalization. Required by <code>SFMCSdk</code>.
 @property (nonatomic, readonly) BOOL trackScreens;
-/// Optional dataspace to use, otherwise uses default dataspace
-@property (nonatomic, readonly, copy) NSString * _Nullable dataspace;
+/// The tenant specific dataspace for your application.
+@property (nonatomic, readonly, copy) NSString * _Nonnull dataspace;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER SWIFT_UNAVAILABLE_MSG("Use the Builder to create an instance.");
 @end
 
-/// This class is a Personalization Config Builder helper.
+/// Used to contruct a <code>PersonalizationConfig</code> to provide to <code>SFMCSdk</code>’s <code>initializeSdk</code>.
+/// See <code>PersonalizationModule</code> for example usage.
 SWIFT_CLASS_NAMED("PersonalizationConfigBuilder")
 @interface SFPersonalizationConfigBuilder : NSObject
-/// Optional dataspace to use, otherwise uses the default dataspace
-- (SFPersonalizationConfigBuilder * _Nonnull)dataspace:(NSString * _Nullable)dspace SWIFT_WARN_UNUSED_RESULT;
-/// Builds configuration.
-///
-/// returns:
-/// PersonalizationConfig
+/// Sets the tenant specific dataspace for your application, defaulting to the value <code>"default"</code>.
+/// Note if an empty value is provided, this function logs a warning and aborts the update, retaining the existing value.
+- (SFPersonalizationConfigBuilder * _Nonnull)dataspace:(NSString * _Nonnull)dspace;
+/// Builds the <code>PersonalizationConfig</code>
+/// @return the built <code>PersonalizationConfig</code>
 - (SFPersonalizationConfig * _Nonnull)build SWIFT_WARN_UNUSED_RESULT;
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
-typedef SWIFT_ENUM_NAMED(NSInteger, SFPersonalizationError, "PersonalizationError", open) {
-  SFPersonalizationErrorInitialization = 1,
-  SFPersonalizationErrorCdpModule = 2,
-  SFPersonalizationErrorConsent = 3,
-  SFPersonalizationErrorRequestInvalid = 4,
-  SFPersonalizationErrorError = 5,
-  SFPersonalizationErrorResponseInvalid = 6,
+/// The <code>NSError</code> <code>code</code>s, when <code>PersonalizationError</code> is bridged to <code>NSError</code> in Objective-C.
+/// See also <code>PersonalizationErrorInfo/domain</code>.
+typedef SWIFT_ENUM_NAMED(NSInteger, SFPersonalizationErrorCode, "PersonalizationErrorCode", open) {
+/// Unexpected or unhandled errors that don’t fit other types,
+  SFPersonalizationErrorCodeUnknown = 0,
+/// Errors during SDK initialization, configuration, or setup.
+  SFPersonalizationErrorCodeInitialization = 1,
+/// Errors related to user consent, privacy settings, or data collection permissions.
+  SFPersonalizationErrorCodeConsent = 2,
+/// Errors in request validation, invalid parameters, or malformed requests.
+  SFPersonalizationErrorCodeRequestInvalid = 3,
+/// Network connectivity errors, HTTP errors, or communication failures.
+  SFPersonalizationErrorCodeNetwork = 4,
+/// Errors parsing or validating server responses, malformed JSON, or missing data.
+  SFPersonalizationErrorCodeResponseInvalid = 5,
+/// Operation timeout errors when requests exceed time limits.
+  SFPersonalizationErrorCodeTimeout = 6,
 };
-static NSString * _Nonnull const SFPersonalizationErrorDomain = @"Personalization.PersonalizationError";
+
+/// Contains the <code>domain</code> to identify when an <code>NSError</code> is a Personalization Sdk error.
+/// See also <code>PersonalizationErrorCode</code>.
+SWIFT_CLASS_NAMED("PersonalizationErrorInfo")
+@interface SFPersonalizationError : NSObject
+/// The <code>NSError</code> <code>domain</code> for a Personalization error.
+SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, copy) NSString * _Nonnull domain;)
++ (NSString * _Nonnull)domain SWIFT_WARN_UNUSED_RESULT;
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
 
 @class SFMCSdkComponents;
-/// This class provides Personalization Software Development Kit feature access and integration point.
+/// Salesforce Personalization SDK for iOS.
+/// Provides personalized content and experiences by fetching personalization decisions based on user context
+/// and configured personalization points.
+/// <em>Key Features</em>
+/// <ul>
+///   <li>
+///     Fetch personalized content decisions
+///   </li>
+///   <li>
+///     Context-aware personalization
+///   </li>
+///   <li>
+///     Auto-populating user information from Cdp (Data Cloud) Sdk
+///   </li>
+///   <li>
+///     Supports <code>async</code> API for easy concurrency/cancellation
+///   </li>
+/// </ul>
+/// <em>Usage</em>
+/// <ul>
+///   <li>
+///     Configuring SFMCSdk, Cdp, and Personalization:
+///     <ul>
+///       <li>
+///         Code:
+///       </li>
+///     </ul>
+///     \code
+///     SFMCSdk.setLogger(logLevel: LogLevel.debug) // Detailed logging for debug/non-production build
+///     let personalizationConfig = PersonalizationConfigBuilder()
+///         .dataspace("default") // Or your desired dataspace
+///         .build()
+///     let cdpConfig = CdpConfigBuilder(
+///         appId: "<Your Data Cloud Connector appId>",
+///         endpoint: "<Your Data Cloud Connector endpoint>")
+///         // ...anything else to your preference, e.g. .trackLifecycle(false)
+///         .build()
+///     let sdkConfig = ConfigBuilder()
+///         .setCdp(config: cdpConfig)
+///         .setPersonalization(config: personalizationConfig)
+///         .build()
+///     SFMCSdk.initializeSdk(sdkConfig) { statuses in
+///         statuses.forEach { status in
+///             //...
+///         }
+///     }
+///
+///     \endcode<ul>
+///       <li>
+///         Where the code would go in a SwiftUI-based app:
+///       </li>
+///     </ul>
+///     \code
+///     @main
+///     struct YourApp: App {
+///         init() {
+///             <code from 1st bullet>
+///             // ...
+///         }
+///         // ...
+///     }
+///
+///     \endcode<ul>
+///       <li>
+///         Where the code would go in an AppDelegate-based app:
+///       </li>
+///     </ul>
+///     \code
+///     @main
+///     class AppDelegate: UIResponder, UIApplicationDelegate {
+///         func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+///             <code from 1st bullet>
+///             // ...
+///             return true
+///         }
+///         // ...
+///     }
+///
+///     \endcode</li>
+///   <li>
+///     Requesting personalizations/decisions, see <code>fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code>
+///   </li>
+/// </ul>
 SWIFT_CLASS_NAMED("PersonalizationModule")
 @interface SFPersonalizationModule : NSObject <SFMCModule>
-/// Module name
+/// Identifies this <code>ModuleName</code> as <code>personalization</code>. Required by <code>SFMCSdk</code>.
 @property (nonatomic, readonly) enum SFMCSdkModuleName name;
-/// PersonalizationModule configuration
-@property (nonatomic, readonly, strong) SFPersonalizationConfig * _Nullable config;
-/// Version of the module
+/// Provides the version of this Personalization SDK.
 SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, copy) NSString * _Nonnull moduleVersion;)
 + (NSString * _Nonnull)moduleVersion SWIFT_WARN_UNUSED_RESULT;
-/// Module state properties
+/// Module state properties, for <code>SFMCSdk</code>.
 SWIFT_CLASS_PROPERTY(@property (nonatomic, class, copy) NSDictionary<NSString *, NSString *> * _Nullable stateProperties;)
 + (NSDictionary<NSString *, NSString *> * _Nullable)stateProperties SWIFT_WARN_UNUSED_RESULT;
 + (void)setStateProperties:(NSDictionary<NSString *, NSString *> * _Nullable)props;
-/// Shared PersonalizationModule Instance
-SWIFT_CLASS_PROPERTY(@property (nonatomic, class, readonly, strong) SFPersonalizationModule * _Nonnull shared;)
-+ (SFPersonalizationModule * _Nonnull)shared SWIFT_WARN_UNUSED_RESULT;
+/// <code>SFMCSdk</code> calls this internally as part of the <code>initializeSdk</code> process. Do not use this directly.
 + (id <SFMCModule> _Nullable)initModuleWithConfig:(id <SFMCSdkModuleConfig> _Nonnull)config components:(SFMCSdkComponents * _Nonnull)components SWIFT_METHOD_FAMILY(none) SWIFT_WARN_UNUSED_RESULT;
-/// The SDK internal initializer.
 - (nonnull instancetype)init SWIFT_UNAVAILABLE;
 + (nonnull instancetype)new SWIFT_UNAVAILABLE_MSG("-init is unavailable");
-/// For direct/manual fetching of persionalization/decisions
-- (void)fetchDecisionsWithPersonalizationPointNames:(NSArray<NSString *> * _Nonnull)personalizationPointNames context:(SFPDecisionsRequestContext * _Nullable)context completionHandler:(void (^ _Nonnull)(SFPDecisionsResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// Fetch personalization decisions for the provided Personalization Points and optional context.
+/// If you don’t want error details, in Swift you can:
+/// \code
+/// guard let response = try? await PersonalizationModule.fetchDecisions(personalizationPointNames: ["examplePointName"]) else { return }
+/// guard let personalization = response.personalizationsByName["examplePointName"] else { return }
+/// // Use personalization.attributes, personalization.data, etc.
+///
+/// \endcodeIf you want error details, in Swift you can do/catch, which can include clauses for catching
+/// <ul>
+///   <li>
+///     anything:
+///   </li>
+/// </ul>
+/// \code
+/// catch {...}
+///
+/// \endcode<ul>
+///   <li>
+///     any <code>PersonalizationError</code>:
+///   </li>
+/// </ul>
+/// \code
+/// catch let error as PersonalizationError {...}
+///
+/// \endcode<ul>
+///   <li>
+///     specific cases:
+///   </li>
+/// </ul>
+/// \code
+/// catch PersonalizationError.initialization(let reason) {...}
+///
+/// \endcodeWith Objective-C and <code>NSError</code>, you can reference <code>SFPersonalizationError.domain</code> (see <code>PersonalizationErrorInfo/domain</code>) ,
+/// and <code>SFPersonalizationErrorCode</code> (see <code>PersonalizationErrorCode</code>) for details.
+/// note:
+/// Grouping personalization point names by datagraph is the responsibility of the caller.
+/// This method does not automatically group or separate requests based on datagraph configuration.
+/// \param personalizationPointNames Array of at least 1 Personalization Point names for which you want decisions returned.
+/// Whitespace is trimmed and empty names are filtered out.
+///
+/// \param context Optional <code>DecisionsRequestContext</code> to provide more info.
+///
+/// \param timeoutSeconds Optional time in seconds after which this fetch task should abort with a <code>PersonalizationError/timeout(_:)</code> error. Defaults to 10 seconds.
+///
+///
+/// throws:
+/// Primarily  <code>PersonalizationError</code>.
+///
+/// returns:
+/// The <code>DecisionsResponse</code> if successful, else throws primarily <code>PersonalizationError</code>,
+/// or <code>CancellationError</code> if you wrap this in a <code>Task</code> and cancel it, e.g. because the screen/scope is going away.
++ (void)fetchDecisionsWithPersonalizationPointNames:(NSArray<NSString *> * _Nonnull)personalizationPointNames context:(SFPDecisionsRequestContext * _Nullable)context timeoutSeconds:(NSTimeInterval)timeoutSeconds completionHandler:(void (^ _Nonnull)(SFPDecisionsResponse * _Nullable, NSError * _Nullable))completionHandler;
+/// Variant of <code>fetchDecisions(personalizationPointNames:context:timeoutSeconds:)</code> without timeout,
+/// for automatic bridging to Objective-C, since an optional <code>TimeInterval?</code> isn’t compatible.
+/// Will use the default timeout of 10 seconds.
+/// note:
+/// Grouping personalization point names by datagraph is the responsibility of the caller.
+/// This method does not automatically group or separate requests based on datagraph configuration.
++ (void)fetchDecisionsWithPersonalizationPointNames:(NSArray<NSString *> * _Nonnull)personalizationPointNames context:(SFPDecisionsRequestContext * _Nullable)context completionHandler:(void (^ _Nonnull)(SFPDecisionsResponse * _Nullable, NSError * _Nullable))completionHandler;
 @end
 
 #endif

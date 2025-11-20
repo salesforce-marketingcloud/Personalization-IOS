@@ -7,12 +7,16 @@
 
 #import <Foundation/Foundation.h>
 
-//! Project version number for Personalization.
+//! Automatic project version number for Framework. `PersonalizationVersion` is preferred.
 FOUNDATION_EXPORT double PersonalizationVersionNumber;
 
-//! Project version string for Personalization.
+//! Automatic project version string for Framework. `PersonalizationVersion` is preferred.
 FOUNDATION_EXPORT const unsigned char PersonalizationVersionString[];
 
+/// Full version string for this Personalization Framework.
+FOUNDATION_EXPORT NSString * _Nonnull const PersonalizationVersion;
+
+/// The root bundle/domain used by this Personalization Framework.
+FOUNDATION_EXPORT NSString * _Nonnull const PersonalizationDomain;
+
 // In this header, you should import all the public headers of your framework using statements like #import <Personalization/PublicHeader.h>
-
-

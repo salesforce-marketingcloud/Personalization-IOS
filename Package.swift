@@ -6,22 +6,31 @@ import PackageDescription
 
 let package = Package(
     name: "Personalization",
+    platforms: [
+            .iOS(.v13)
+        ],
     products: [
         .library(
             name: "Personalization",
-            targets: ["Personalization"]
-        ),
+            targets: ["PersonalizationSdkWrapper"]
+        )
     ],
     dependencies: [
-        .package(url: "https://github.com/salesforce-marketingcloud/sfmc-sdk-ios",
-                "2.0.2"..."2.0.2"),
-        .package(url: "https://github.com/salesforce-marketingcloud/mobile-sdk-cdp-ios.git",
-                "2.0.6"..."2.0.6")
+        .package(url: "https://github.com/salesforce-marketingcloud/mobile-sdk-cdp-ios.git", from: "3.0.0")
     ],
     targets: [
         .binaryTarget(
             name: "Personalization",
             path: "Frameworks/Personalization.xcframework"
+        ),
+        .target(
+            name: "PersonalizationSdkWrapper",
+            dependencies: [
+                .target(name: "Personalization"),
+                // CDP pulls in the transitive SFMC dependency
+                .product(name: "Cdp", package: "mobile-sdk-cdp-ios")
+            ],
+            path: "PersonalizationSdkWrapper"
         )
     ]
 )
