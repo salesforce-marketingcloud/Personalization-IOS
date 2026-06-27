@@ -1,8 +1,9 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.1.2 effective-5.10 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
-// swift-module-flags: -target arm64-apple-ios13.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name Personalization
-// swift-module-flags-ignorable: -no-verify-emitted-module-interface -interface-compiler-version 6.1.2
+// swift-compiler-version: Apple Swift version 6.2.3 effective-5.10 (swiftlang-6.2.3.3.21 clang-1700.6.3.2)
+// swift-module-flags: -target arm64-apple-ios15.6-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name Personalization
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.3
 import Cdp
+import Combine
 import Foundation
 @_exported import Personalization
 import SFMCSDK
@@ -11,13 +12,115 @@ import UIKit
 import _Concurrency
 import _StringProcessing
 import _SwiftConcurrencyShims
+import zlib
+public struct PreviewReceipt {
+  public let timestamp: Foundation.TimeInterval
+}
+@_hasMissingDesignatedInitializers @objc(SFPTransformationConfig) public class TransformationConfig : ObjectiveC.NSObject, Swift.Codable {
+  public static let transformationWhenTypeImmediately: Swift.String
+  public static let targetMethodTypeContentZoneHandler: Swift.String
+  @objc public var transformations: [Personalization.Transformation] {
+    @objc get
+  }
+  @objc convenience public init(transformations: [Personalization.Transformation] = [])
+  @objc deinit
+  public func encode(to encoder: any Swift.Encoder) throws
+  required public init(from decoder: any Swift.Decoder) throws
+}
+@objc(SFPTransTypeDetails) public class TransformerTypeDetails : ObjectiveC.NSObject, Swift.Codable {
+  @objc final public let componentName: Swift.String?
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public init(componentName: Swift.String? = nil)
+  #endif
+  @objc deinit
+  public func encode(to encoder: any Swift.Encoder) throws
+  required public init(from decoder: any Swift.Decoder) throws
+}
+@objc(SFPSubDefConfigType) public enum SubDefConfigType : Swift.Int, Swift.Codable, Swift.RawRepresentable {
+  public typealias RawValue = Swift.String
+  case schemaPath
+  case staticValue
+  public var rawValue: Personalization.SubDefConfigType.RawValue {
+    get
+  }
+  public init(from decoder: any Swift.Decoder) throws
+  public init(rawValue: Personalization.SubDefConfigType.RawValue)
+  public func encode(to encoder: any Swift.Encoder) throws
+}
+@objc(SFPTransformerSubDef) public class TransformerSubDef : ObjectiveC.NSObject, Swift.Codable {
+  @objc final public let defaultValue: Swift.String?
+  @objc public var configType: Personalization.SubDefConfigType {
+    @objc get
+  }
+  @objc public var isOverridable: Swift.Bool {
+    @objc get
+  }
+  @objc public var isRequired: Swift.Bool {
+    @objc get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public init(configType: Personalization.SubDefConfigType = .schemaPath, defaultValue: Swift.String? = nil, isOverridable: Swift.Bool = false, isRequired: Swift.Bool = true)
+  #endif
+  @objc deinit
+  public func encode(to encoder: any Swift.Encoder) throws
+  required public init(from decoder: any Swift.Decoder) throws
+}
+@_hasMissingDesignatedInitializers @objc(SFPDataProvider) public class DataProvider : ObjectiveC.NSObject, Swift.Codable {
+  public static let dataProviderTypePersonalizationPoint: Swift.String
+  public static let dataProviderGroupByTypeDataGraph: Swift.String
+  @objc final public let value: Swift.String
+  @objc final public let groupByValue: Swift.String?
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc convenience public init(value: Swift.String, groupByValue: Swift.String? = nil)
+  #endif
+  @objc deinit
+  public func encode(to encoder: any Swift.Encoder) throws
+  required public init(from decoder: any Swift.Decoder) throws
+}
+@objc(SFPersonalizationExperienceConfig) public class PersonalizationExperienceConfig : ObjectiveC.NSObject, Swift.Codable {
+  @objc final public let name: Swift.String
+  @objc final public let dataProvider: Personalization.DataProvider?
+  @objc final public let transformationConfig: Personalization.TransformationConfig
+  @objc final public let lastModifiedDate: Foundation.Date?
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public var publishedDate: Foundation.Date? {
+    @objc get
+  }
+  #endif
+  @objc public var isEnabled: Swift.Bool {
+    @objc get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public init(name: Swift.String, dataProvider: Personalization.DataProvider? = nil, transformationConfig: Personalization.TransformationConfig, isEnabled: Swift.Bool = true, publishedDate: Foundation.Date? = nil, lastModifiedDate: Foundation.Date? = nil)
+  #endif
+  @objc deinit
+  public func encode(to encoder: any Swift.Encoder) throws
+  required public init(from decoder: any Swift.Decoder) throws
+}
+@objc(SFPTransformation) public class Transformation : ObjectiveC.NSObject, Swift.Codable {
+  @objc final public let transformerName: Swift.String
+  @objc final public let name: Swift.String?
+  @objc public var substitutionValues: [Swift.String : Swift.String] {
+    @objc get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public init(transformerName: Swift.String, substitutionValues: [Swift.String : Swift.String] = [:], name: Swift.String? = nil)
+  #endif
+  @objc deinit
+  public func encode(to encoder: any Swift.Encoder) throws
+  required public init(from decoder: any Swift.Decoder) throws
+}
 @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @objc(SFPersonalizationConfig) public class PersonalizationConfig : ObjectiveC.NSObject, SFMCSDK.ModuleConfig {
   @objc final public let name: SFMCSDK.ModuleName
   @objc final public let appId: Swift.String
   @objc final public let trackScreens: Swift.Bool
   @objc final public let dataspace: Swift.String
+  @objc final public let cdnUrl: Swift.String?
   @available(*, unavailable, message: "Use the Builder to create an instance.")
   @objc override dynamic public init()
+  @objc override dynamic public var description: Swift.String {
+    @objc get
+  }
   @objc deinit
 }
 @_hasMissingDesignatedInitializers @objc(SFPDecisionsResponsePersonalization) public class DecisionsResponsePersonalization : ObjectiveC.NSObject {
@@ -29,14 +132,25 @@ import _SwiftConcurrencyShims
   @objc final public let attributes: [Swift.String : Any]
   @objc deinit
 }
+public struct ContentZonePersonalization {
+  public let componentJson: Foundation.Data
+  public let componentName: Swift.String
+  public let personalizationId: Swift.String
+  public let engagementPayloads: Personalization.EngagementPayloads?
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init(componentJson: Foundation.Data, componentName: Swift.String, personalizationId: Swift.String, engagementPayloads: Personalization.EngagementPayloads? = nil)
+  #endif
+}
 @_hasMissingDesignatedInitializers @objc(SFPDecisionsResponseContentObject) public class DecisionsResponseContentObject : ObjectiveC.NSObject {
   @objc public var personalizationContentId: Swift.String {
     @objc get
   }
   @objc final public let jsonDict: [Swift.String : Any]
+  #if compiler(>=5.3) && $NonescapableTypes
   @objc public subscript(key: Swift.String) -> Any? {
     @objc get
   }
+  #endif
   @objc public var keys: [Swift.String] {
     @objc get
   }
@@ -46,7 +160,11 @@ import _SwiftConcurrencyShims
   @objc public var anchorId: Swift.String? {
     get
   }
+  @available(*, deprecated, message: "Use anchorType instead")
   @objc public var anchorDmoName: Swift.String? {
+    get
+  }
+  @objc public var anchorType: Swift.String? {
     get
   }
   @objc public var contextualAttributes: [Swift.String : Any] {
@@ -59,15 +177,15 @@ import _SwiftConcurrencyShims
 @_hasMissingDesignatedInitializers @objc(SFPDecisionsResponse) final public class DecisionsResponse : ObjectiveC.NSObject {
   @objc final public let requestId: Swift.String
   @objc final public let personalizations: [Personalization.DecisionsResponsePersonalization]
-  @objc final public var personalizationsByName: [Swift.String : Personalization.DecisionsResponsePersonalization] {
-    @objc get
-    @objc set
-  }
+  @objc final public let personalizationsByName: [Swift.String : Personalization.DecisionsResponsePersonalization]
   @objc deinit
 }
 @_inheritsConvenienceInitializers @objc(SFPersonalizationConfigBuilder) public class PersonalizationConfigBuilder : ObjectiveC.NSObject {
   @discardableResult
   @objc public func dataspace(_ dspace: Swift.String) -> Personalization.PersonalizationConfigBuilder
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func cdnUrl(_ url: Swift.String?) -> Personalization.PersonalizationConfigBuilder
+  #endif
   @objc public func build() -> Personalization.PersonalizationConfig
   @objc override dynamic public init()
   @objc deinit
@@ -80,7 +198,9 @@ import _SwiftConcurrencyShims
   case network
   case responseInvalid
   case timeout
+  #if compiler(>=5.3) && $NonescapableTypes
   public init?(rawValue: Swift.Int)
+  #endif
   public typealias RawValue = Swift.Int
   public var rawValue: Swift.Int {
     get
@@ -104,12 +224,16 @@ public enum PersonalizationError : Swift.Error, Foundation.CustomNSError, Founda
   public var errorUserInfo: [Swift.String : Any] {
     get
   }
+  #if compiler(>=5.3) && $NonescapableTypes
   public var errorDescription: Swift.String? {
     get
   }
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
   public var failureReason: Swift.String? {
     get
   }
+  #endif
 }
 @_inheritsConvenienceInitializers @objc(SFPersonalizationError) final public class PersonalizationErrorInfo : ObjectiveC.NSObject {
   @objc public static let domain: Swift.String
@@ -117,8 +241,16 @@ public enum PersonalizationError : Swift.Error, Foundation.CustomNSError, Founda
   @objc deinit
 }
 @_inheritsConvenienceInitializers @objc(SFPDecisionsRequestContextBuilder) public class DecisionsRequestContextBuilder : ObjectiveC.NSObject {
+  #if compiler(>=5.3) && $NonescapableTypes
   @objc public func anchorId(_ aId: Swift.String?) -> Personalization.DecisionsRequestContextBuilder
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @available(*, deprecated, message: "Use anchorType(_:) instead")
   @objc public func anchorDmoName(_ aDmoName: Swift.String?) -> Personalization.DecisionsRequestContextBuilder
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public func anchorType(_ aType: Swift.String?) -> Personalization.DecisionsRequestContextBuilder
+  #endif
   @objc public func contextualAttribute(name: Swift.String, string: Swift.String) -> Personalization.DecisionsRequestContextBuilder
   @objc public func contextualAttribute(name: Swift.String, int: Swift.Int) -> Personalization.DecisionsRequestContextBuilder
   @objc public func contextualAttribute(name: Swift.String, double: Swift.Double) -> Personalization.DecisionsRequestContextBuilder
@@ -129,21 +261,62 @@ public enum PersonalizationError : Swift.Error, Foundation.CustomNSError, Founda
   @objc override dynamic public init()
   @objc deinit
 }
-@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @objc(SFPersonalizationModule) final public class PersonalizationModule : ObjectiveC.NSObject, SFMCSDK.SFMCModule, SFMCSDK.Publisher {
+@_hasMissingDesignatedInitializers @objc(SFPersonalizationModule) final public class PersonalizationModule : ObjectiveC.NSObject, SFMCSDK.SFMCModule, SFMCSDK.Publisher {
   @objc final public let name: SFMCSDK.ModuleName
   @objc public static let moduleVersion: Swift.String
+  #if compiler(>=5.3) && $NonescapableTypes
   @objc public static var stateProperties: [Swift.String : Swift.String]? {
     @objc get
     @objc set(props)
   }
-  public static var config: Personalization.PersonalizationConfig? {
+  #endif
+  public static let previewParam: Swift.String
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public static func initModule(config: any SFMCSDK.ModuleConfig, components: SFMCSDK.SFMCSdkComponents) -> (any SFMCSDK.SFMCModule)?
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public static func fetchDecisions(personalizationPointNames: [Swift.String], decisionsRequestContext: Personalization.DecisionsRequestContext? = nil, timeoutSeconds: Foundation.TimeInterval = 10) async throws -> Personalization.DecisionsResponse
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  @objc public static func fetchDecisions(personalizationPointNames: [Swift.String], decisionsRequestContext: Personalization.DecisionsRequestContext?) async throws -> Personalization.DecisionsResponse
+  #endif
+  #if compiler(>=5.3) && $NonescapableTypes
+  public static func getContentZonePersonalization(contentZoneName: Swift.String, allowedComponentNames: [Swift.String] = [], decisionsRequestContext: Personalization.DecisionsRequestContext? = nil, timeoutSeconds: Foundation.TimeInterval = 10.0, isPreview: Swift.Bool = false) async throws -> Personalization.ContentZonePersonalization
+  #endif
+  @_Concurrency.MainActor public static var previewStatePublisher: Combine.AnyPublisher<[Swift.String : Personalization.PreviewReceipt], Swift.Never> {
     get
   }
-  @objc public static func initModule(config: any SFMCSDK.ModuleConfig, components: SFMCSDK.SFMCSdkComponents) -> (any SFMCSDK.SFMCModule)?
-  @objc public static func fetchDecisions(personalizationPointNames: [Swift.String], context: Personalization.DecisionsRequestContext? = nil, timeoutSeconds: Foundation.TimeInterval = 10) async throws -> Personalization.DecisionsResponse
-  @objc public static func fetchDecisions(personalizationPointNames: [Swift.String], context: Personalization.DecisionsRequestContext?) async throws -> Personalization.DecisionsResponse
+  @_Concurrency.MainActor public static var previewStateCurrent: [Swift.String : Personalization.PreviewReceipt] {
+    get
+  }
+  public static func handlePreviewURL(_ url: Foundation.URL)
+  public static func handlePreviewURL(_ urlString: Swift.String)
   @objc deinit
 }
+public typealias EngagementPayload = [Swift.String : Any]
+public typealias EngagementPayloadsByAction = [Swift.String : Personalization.EngagementPayload]
+@_hasMissingDesignatedInitializers public class EngagementPayloads {
+  public static func track(_ payload: Personalization.EngagementPayload)
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class PerActionEngagementPayloads : Personalization.EngagementPayloads {
+  final public let payloadsPerAction: Personalization.EngagementPayloadsByAction
+  public init(payloadsPerAction: Personalization.EngagementPayloadsByAction)
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func payloadForAction(_ action: Swift.String) -> Personalization.EngagementPayload?
+  #endif
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class PerItemAndActionEngagementPayloads : Personalization.EngagementPayloads {
+  final public let payloadsPerItemAndAction: [Personalization.EngagementPayloadsByAction]
+  public init(payloadsPerItemAndAction: [Personalization.EngagementPayloadsByAction])
+  #if compiler(>=5.3) && $NonescapableTypes
+  final public func payloadForItemIndexAndAction(itemIndex: Swift.Int, action: Swift.String) -> Personalization.EngagementPayload?
+  #endif
+  @objc deinit
+}
+extension Personalization.SubDefConfigType : Swift.Equatable {}
+extension Personalization.SubDefConfigType : Swift.Hashable {}
 extension Personalization.PersonalizationErrorCode : Swift.Equatable {}
 extension Personalization.PersonalizationErrorCode : Swift.Hashable {}
 extension Personalization.PersonalizationErrorCode : Swift.RawRepresentable {}

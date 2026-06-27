@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 // This gets copied over from the dev repo over to the staging repo, then we push the staging repo to production during a release
 
@@ -7,8 +7,8 @@ import PackageDescription
 let package = Package(
     name: "Personalization",
     platforms: [
-            .iOS(.v13)
-        ],
+        .iOS(.v15)
+    ],
     products: [
         .library(
             name: "Personalization",
